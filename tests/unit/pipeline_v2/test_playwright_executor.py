@@ -609,7 +609,7 @@ class PlaywrightExecutorTest(unittest.TestCase):
                                             "duration": 120000,
                                             "error": {
                                                 "message": (
-                                                    "Error: [models] qianfan OpenAI ListModels failed: "
+                                                    "Error: [models] upstream OpenAI ListModels failed: "
                                                     "http 429 from OpenAI models API: "
                                                     "{\"message\":\"Over rate limit.\",\"code\":\"OverRateLimit\"}"
                                                 ),
