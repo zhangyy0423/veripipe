@@ -17,3 +17,18 @@ three verdicts the oracle can reach:
 
 Only the machine-verified failure is filed. See
 [`../docs/methodology.md`](../docs/methodology.md) for the reasoning.
+
+## Recording / sharing the demo
+
+A pre-recorded cast (generated from the real run) is checked in:
+
+```bash
+asciinema play examples/demo.cast          # play it
+agg examples/demo.cast examples/demo.gif    # optional: render a GIF
+```
+
+Re-record it yourself:
+
+```bash
+asciinema rec -c 'bash examples/record-demo.sh' examples/demo.cast
+```
