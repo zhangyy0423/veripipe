@@ -109,6 +109,16 @@ pip install veripipe          # installs pipeline_v2 + pipeline_v2_mcp (pulls Py
 Everything below is **offline and side-effect-free** (`--dry-run` writes intent
 to a queue file instead of pushing anywhere).
 
+See the method in ~60 seconds on the neutral fixtures (no product, no network):
+
+```bash
+python3 examples/demo.py
+```
+
+It walks one contract through three agent runs — a real success, a false "done,"
+and an unbacked claim — and shows that only the machine-verified failure is
+filed. See [`docs/methodology.md`](docs/methodology.md) for the reasoning.
+
 Run the orchestrator against the mock executor:
 
 ```bash
