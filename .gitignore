@@ -29,3 +29,6 @@ tests/contract/neutrality.denylist
 .idea/
 .vscode/
 *.swp
+
+# private working notes / growth playbook (never published)
+/.notes/
