@@ -212,6 +212,8 @@ server into a dsh host.
 
 ## Documentation
 
+- [`docs/methodology.md`](docs/methodology.md) — the anti-false-positive method
+  the whole project is built on (readable on its own).
 - [`docs/adapters.md`](docs/adapters.md) — adapter layout, host mapping, the
   executor matrix, and the bring-your-own-transport pattern.
 - [`docs/publish-github.md`](docs/publish-github.md) — filing machine-verified
