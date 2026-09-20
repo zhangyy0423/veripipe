@@ -110,7 +110,13 @@ export PYTHONPATH="$PWD/shared-skills/pipeline-v2/scripts:$PYTHONPATH"
 python3 -m pipeline_v2.orchestrator --help
 ```
 
-As a package (once published):
+Install from GitHub (no PyPI account needed):
+
+```bash
+pip install "git+https://github.com/zhangyy0423/veripipe"
+```
+
+Or, once it is published to PyPI:
 
 ```bash
 pip install veripipe          # installs pipeline_v2 + pipeline_v2_mcp (pulls PyYAML)
