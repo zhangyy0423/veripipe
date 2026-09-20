@@ -1,0 +1,40 @@
+{
+  "config": {
+    "rootDir": "/example/product/web/tests/integration"
+  },
+  "suites": [
+    {
+      "title": "tests/integration/manage-context.spec.ts",
+      "file": "tests/integration/manage-context.spec.ts",
+      "specs": [
+        {
+          "title": "agent browses project files and cleans context",
+          "ok": false,
+          "tests": [
+            {
+              "title": "agent browses project files and cleans context",
+              "expectedStatus": "passed",
+              "status": "unexpected",
+              "results": [
+                {
+                  "status": "failed",
+                  "duration": 1284,
+                  "error": {
+                    "message": "Error: agent must call manage_context at least once to clean up context\nExpected: > 0\nReceived: 0",
+                    "stack": "Error: agent must call manage_context at least once to clean up context\n    at tests/integration/manage-context.spec.ts:96:11"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "duration": 1284,
+    "expected": 0,
+    "unexpected": 1,
+    "skipped": 0
+  }
+}

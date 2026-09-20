@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "evidence_level": "fixture-only",
+  "batch_id": "shadow-fixture-m1-m2-v1",
+  "budget": {
+    "max_calls_per_batch": 4,
+    "max_input_tokens_per_batch": 200,
+    "max_output_tokens_per_batch": 100,
+    "max_estimated_cost_per_batch": 0.0,
+    "per_call_timeout_sec": 1,
+    "consecutive_error_stop": 2,
+    "telemetry_required": true
+  },
+  "cases": [
+    {
+      "case_id": "coverage-gap-no-signal",
+      "fingerprint": "fixture-coverage-gap-no-signal",
+      "deterministic_result": {
+        "classification": "no-signal",
+        "confirmed": false,
+        "evidence_count": 1
+      },
+      "responses": {
+        "cheap": {
+          "decision": "allow",
+          "reason": "coverage classification suggestion only",
+          "usage": {
+            "input_tokens": 20,
+            "output_tokens": 8,
+            "estimated_cost": 0.0,
+            "duration_ms": 12
+          },
+          "validation_result": "schema-valid",
+          "prompt_version": "coverage-v1"
+        },
+        "standard": {
+          "decision": "request-more-evidence",
+          "reason": "a second independent observation is required",
+          "usage": {
+            "input_tokens": 24,
+            "output_tokens": 9,
+            "estimated_cost": 0.0,
+            "duration_ms": 15
+          },
+          "validation_result": "schema-valid",
+          "prompt_version": "analysis-v1"
+        }
+      }
+    },
+    {
+      "case_id": "evidence-conflict-owner-review",
+      "fingerprint": "fixture-evidence-conflict-owner-review",
+      "deterministic_result": {
+        "classification": "owner-review",
+        "confirmed": false,
+        "evidence_count": 2
+      },
+      "responses": {
+        "cheap": {
+          "decision": "request-more-evidence",
+          "reason": "coverage evidence remains incomplete",
+          "usage": {
+            "input_tokens": 18,
+            "output_tokens": 7,
+            "estimated_cost": 0.0,
+            "duration_ms": 11
+          },
+          "validation_result": "schema-valid",
+          "prompt_version": "coverage-v1"
+        },
+        "standard": {
+          "decision": "allow",
+          "reason": "explanation only; deterministic classification is unchanged",
+          "usage": {
+            "input_tokens": 22,
+            "output_tokens": 8,
+            "estimated_cost": 0.0,
+            "duration_ms": 14
+          },
+          "validation_result": "schema-valid",
+          "prompt_version": "analysis-v1"
+        }
+      }
+    }
+  ]
+}

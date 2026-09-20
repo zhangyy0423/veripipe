@@ -1,0 +1,28 @@
+{
+  "suites": [
+    {
+      "title": "tests/integration/clarify-question.spec.ts",
+      "file": "tests/integration/clarify-question.spec.ts",
+      "specs": [
+        {
+          "title": "LLM asks via clarify_question; user picks; LLM continues",
+          "ok": true,
+          "tests": [
+            {
+              "title": "LLM asks via clarify_question; user picks; LLM continues",
+              "expectedStatus": "skipped",
+              "status": "skipped",
+              "results": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "duration": 0,
+    "expected": 0,
+    "unexpected": 0,
+    "skipped": 1
+  }
+}

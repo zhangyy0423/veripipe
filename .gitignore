@@ -1,0 +1,26 @@
+# caches / build
+__pycache__/
+*.pyc
+.pytest_cache/
+.gocache/
+.cache/
+.DS_Store
+build/
+dist/
+*.egg-info/
+
+# runtime state (lives in the product repo cwd, never here)
+.tmp/
+output
+*.local.json
+*.local.env
+configs/*.env
+
+# private product-neutrality denylist (origin tokens stay out of the public tree)
+*.denylist
+tests/contract/neutrality.denylist
+
+# editors
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,36 @@
+{
+  "config": {
+    "rootDir": "/example/product/web/tests/integration"
+  },
+  "suites": [
+    {
+      "title": "tests/integration/environment-skill.spec.ts",
+      "file": "tests/integration/environment-skill.spec.ts",
+      "specs": [
+        {
+          "title": "/api/skills exposes every environment tool",
+          "ok": true,
+          "tests": [
+            {
+              "title": "/api/skills exposes every environment tool",
+              "expectedStatus": "passed",
+              "status": "expected",
+              "results": [
+                {
+                  "status": "passed",
+                  "duration": 37
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "stats": {
+    "duration": 37,
+    "expected": 1,
+    "unexpected": 0,
+    "skipped": 0
+  }
+}

@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    name: gates (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Show toolchain
+        run: |
+          python3 --version
+          bash --version | head -n1
+
+      # The full gate suite is standard-library only: bash-syntax,
+      # python-syntax, secret-scan, contract (Playwright dry-run + MCP
+      # smoke + product-neutrality) and unit (installer + engine + MCP).
+      - name: Run CI gates
+        run: bash scripts/ci/run-gates.sh

@@ -1,0 +1,55 @@
+{
+  "product": "sample-product",
+  "version": "0.1.0",
+  "framework_version": "0.1.0",
+  "production_write_default": false,
+  "model_routing": {
+    "enabled": false,
+    "command": [],
+    "allowed_triggers": ["machine-verified-failure"],
+    "roles": {
+      "cheap": {"model_id": "unconfigured", "prompt_version": "coverage-v1"},
+      "standard": {"model_id": "unconfigured", "prompt_version": "analysis-v1"},
+      "strong": {"model_id": "unconfigured", "prompt_version": "veto-v1"}
+    }
+  },
+  "publishing": {
+    "enabled": false,
+    "create_bug_command": [],
+    "publish_wiki_command": [],
+    "status_command": []
+  },
+  "tracker": {
+    "project_id": 1,
+    "space_id": "fixture-space",
+    "alias": "sample_fixture"
+  },
+  "test_routes": [
+    {
+      "keywords": ["sample", "fixture"],
+      "cmd_template": "fixture-only"
+    }
+  ],
+  "playwright": {
+    "web_subdir": "web",
+    "config_path": "playwright.config.ts",
+    "spec_dir": "tests/integration",
+    "required_browsers": [],
+    "required_env": [],
+    "required_env_files": [],
+    "preflight_paths": [],
+    "required_hosts": [],
+    "spec_whitelist": [
+      {
+        "spec": "sample-contract.spec.ts",
+        "semantic_map_entry_id": "sample.skill.contract",
+        "kind": "contract",
+        "workflow": "fixture",
+        "gate": "repo-local-fixture",
+        "reason": "验证 pipeline-v2 core 不依赖具体产品事实"
+      }
+    ],
+    "testdata_gates": [],
+    "excluded_patterns": ["visual", "debug", "manual", "probe", "headed", "real-api"]
+  }
+}

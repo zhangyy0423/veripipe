@@ -1,0 +1,40 @@
+schema_version: 1
+product: sample-product
+based_on_product_commit: fixture
+source_commit_label: sample-product@fixture
+source_paths:
+  - web/tests/integration/sample-contract.spec.ts
+entries:
+  - id: sample.skill.contract
+    skill:
+      name: sample_contract
+      description: Repo-local product-neutral fixture contract.
+      anchor:
+        path: web/tests/integration/sample-contract.spec.ts
+        line: 1
+        section: fixture
+    flow:
+      summary: Execute one sample contract without product-specific runtime dependencies.
+      steps:
+        - id: execute
+          action: Run the fixture assertion.
+          anchor:
+            path: web/tests/integration/sample-contract.spec.ts
+            line: 1
+            section: fixture
+    expected_terminal_state:
+      assertion: passed == true
+      observable: Playwright JSON reporter status
+      assertion_type: fixture_state
+      machine_check:
+        field: passed
+        op: eq
+        value: true
+      anchor:
+        path: web/tests/integration/sample-contract.spec.ts
+        line: 1
+        section: fixture
+    anchors:
+      - path: web/tests/integration/sample-contract.spec.ts
+        line: 1
+        section: fixture
