@@ -1,0 +1,16 @@
+{
+  "product": "sample-product",
+  "version": "0.1.0",
+  "framework_version": "0.1.0",
+  "production_write_default": false,
+  "external": {
+    "command": ["python3", "-c", "import sys,json;json.dump({'observed_state':{'ready':True}},sys.stdout)"],
+    "scenarios": [
+      {
+        "scenario_id": "sample-external-contract",
+        "test_cmd": "sample-contract",
+        "semantic_map_entry_id": "sample.external.contract"
+      }
+    ]
+  }
+}

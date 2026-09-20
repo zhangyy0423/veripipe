@@ -87,24 +87,42 @@ selected with `--executor`:
 | `playwright` | `playwright` | L2 (spec-as-oracle) | JSON-reporter spec runs |
 | `http` | `http_driver` | L3 (differential / metamorphic) + bounded L1 | HTTP/WS products |
 | `l1-fuzz` | `l1_fuzz` | L1 | malformed-input robustness |
+| `external` | `external` | L2 (machine_check) | any transport, via a product command returning `observed_state` |
 
-If a product speaks a protocol none of these cover, keep the core neutral and
-add the transport **in the private adapter**, using the engine as a library:
+If a product speaks a protocol none of the first four cover, keep the core
+neutral and plug the transport in through the **`external`** executor. The
+adapter supplies a `command` and a list of `scenarios` bound to semantic-map
+entries:
 
-1. Drive the product with your own transport and fold the result into a
-   **structured `observed_state`** dict — never agent output text.
-2. `evaluate_l2_oracle(entry, observed_state, ...)` returns a tri-state verdict
-   (`pass` / measured failure / `inconclusive`; it fails closed).
-3. On a machine-verified failure, `failure_fingerprint(signal)` +
-   `build_queue_event("bug_report", payload)` append a reviewable event to a
-   queue JSONL.
-4. Hand the queue to the `publish-github` skill to stage a human-reviewed draft
-   (see `shared-skills/publish-github/SKILL.md`).
+```json
+{
+  "external": {
+    "command": ["python3", "products/<product>/driver.py"],
+    "scenarios": [
+      { "scenario_id": "s1", "semantic_map_entry_id": "<product>.skill.x" }
+    ]
+  }
+}
+```
+
+The command receives one scenario as JSON on stdin and returns
+`{"observed_state": {...}}` on stdout (a bare object is treated as the observed
+state). The standard L2 `machine_check` oracle then judges the structured state:
+
+```bash
+python3 -m pipeline_v2.orchestrator --executor external \
+  --adapter products/<product>/adapter.config.json \
+  --ledger /tmp/l.sqlite --queue /tmp/q.jsonl --brief /tmp/b.md
+# offline: replace the live command with a recorded fixture
+#   --dry-run --report observed-states.json   # {"observed_states": {"<entry>": {...}}}
+```
 
 Only structured state crosses the boundary, so a product-specific transport
-(for example a WebSocket RPC mux) can be supported without teaching the core
+(for example a WebSocket RPC mux) is supported without teaching the core
 anything product-specific. The transport, its endpoints, and its event names
-stay in the private adapter.
+stay in the private adapter. (You can also drive the engine as a library —
+`evaluate_l2_oracle` → `failure_fingerprint` → `build_queue_event` → the
+`publish-github` skill — when you need full control.)
 
 ## Confidentiality
 

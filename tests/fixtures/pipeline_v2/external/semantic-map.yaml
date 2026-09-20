@@ -1,0 +1,40 @@
+schema_version: 1
+product: sample-product
+based_on_product_commit: fixture
+source_commit_label: sample-product@fixture
+source_paths:
+  - external/contract
+entries:
+  - id: sample.external.contract
+    skill:
+      name: sample_external
+      description: Product-neutral fixture for the external executor.
+      anchor:
+        path: external/contract
+        line: 1
+        section: fixture
+    flow:
+      summary: A product-provided command returns a structured terminal state.
+      steps:
+        - id: run
+          action: Run the external command and read observed_state.
+          anchor:
+            path: external/contract
+            line: 1
+            section: fixture
+    expected_terminal_state:
+      assertion: ready == true
+      observable: Structured terminal state from the external command.
+      assertion_type: workflow_state
+      machine_check:
+        field: ready
+        op: eq
+        value: true
+      anchor:
+        path: external/contract
+        line: 1
+        section: fixture
+    anchors:
+      - path: external/contract
+        line: 1
+        section: fixture

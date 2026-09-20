@@ -118,6 +118,97 @@ class MockExecutor:
         return self._calls.get(scenario_id, 0)
 
 
+def _external_result_from_payload(
+    payload: Any, *, stdout: str = "", stderr: str = "", exit_code: int = 0
+) -> "ExecutionResult":
+    """Normalize an external command payload into an ExecutionResult."""
+    if isinstance(payload, Mapping) and isinstance(payload.get("observed_state"), Mapping):
+        return ExecutionResult(
+            observed_state=dict(payload["observed_state"]),
+            raw_failure=str(payload.get("raw_failure") or ""),
+            exit_code=int(payload.get("exit_code", exit_code) or 0),
+            stdout=stdout,
+            stderr=stderr,
+            environment_unavailable=bool(payload.get("environment_unavailable", False)),
+        )
+    observed = dict(payload) if isinstance(payload, Mapping) else {}
+    return ExecutionResult(observed_state=observed, stdout=stdout, stderr=stderr, exit_code=exit_code)
+
+
+class ExternalExecutor:
+    """Product-neutral executor that shells out to a product-provided command.
+
+    The command receives one scenario as JSON on stdin and returns the observed
+    terminal state as JSON on stdout, e.g.::
+
+        {"observed_state": {...}, "exit_code": 0, "raw_failure": "",
+         "environment_unavailable": false}
+
+    A bare JSON object without an ``observed_state`` key is treated as the
+    observed state itself. The command — and everything it drives — is
+    product-specific and lives in the (owner-gated) adapter; only structured
+    state crosses back into the neutral core. In ``--dry-run`` the observed
+    state is read from a fixture mapping keyed by ``semantic_map_entry_id``
+    (falling back to ``scenario_id``) and nothing is executed.
+    """
+
+    def __init__(
+        self,
+        command: Sequence[str],
+        *,
+        product_cwd: Optional[Path] = None,
+        timeout_sec: int = 1800,
+        dry_run_states: Optional[Mapping[str, Mapping[str, Any]]] = None,
+    ) -> None:
+        self._command = list(command)
+        self._cwd = str(product_cwd) if product_cwd else None
+        self._timeout = timeout_sec
+        self._dry = dry_run_states
+
+    def run(self, *, test_cmd: str, scenario: "ExecutionScenario") -> "ExecutionResult":
+        entry = scenario.semantic_map_entry or {}
+        entry_id = str(entry.get("id") or "")
+        if self._dry is not None:
+            key = entry_id if entry_id in self._dry else scenario.scenario_id
+            state = self._dry.get(key)
+            if not isinstance(state, Mapping):
+                return ExecutionResult(
+                    observed_state={}, environment_unavailable=True,
+                    raw_failure=f"no dry-run observed_state for {key}",
+                )
+            return _external_result_from_payload(state)
+        payload = json.dumps(
+            {"scenario_id": scenario.scenario_id, "step_id": scenario.step_id,
+             "test_cmd": test_cmd, "semantic_map_entry_id": entry_id},
+            ensure_ascii=False,
+        )
+        try:
+            proc = subprocess.run(
+                self._command, input=payload, capture_output=True, text=True,
+                cwd=self._cwd, timeout=self._timeout,
+            )
+        except (OSError, subprocess.SubprocessError) as exc:
+            return ExecutionResult(observed_state={}, environment_unavailable=True,
+                                   raw_failure=f"external executor failed: {exc}")
+        if proc.returncode != 0 and not proc.stdout.strip():
+            return ExecutionResult(
+                observed_state={}, exit_code=proc.returncode, stderr=proc.stderr,
+                environment_unavailable=True,
+                raw_failure=proc.stderr.strip() or "external executor nonzero exit",
+            )
+        try:
+            parsed = json.loads(proc.stdout)
+        except json.JSONDecodeError as exc:
+            return ExecutionResult(
+                observed_state={}, exit_code=proc.returncode, stderr=proc.stderr,
+                environment_unavailable=True,
+                raw_failure=f"external executor stdout not JSON: {exc}",
+            )
+        return _external_result_from_payload(
+            parsed, stdout=proc.stdout, stderr=proc.stderr, exit_code=proc.returncode
+        )
+
+
 @dataclass(frozen=True)
 class OrchestratorResult:
     """High-level batch result suitable for CLI JSON output."""
@@ -1048,6 +1139,87 @@ def build_adapter_http_run(
         scenarios,
         target_plan_path=target_plan_path,
         oracle_level="L3",
+    )
+    return executor, scenarios
+
+
+def build_adapter_external_run(
+    *,
+    adapter_path: Path | str,
+    semantic_map_path: Optional[Path | str] = None,
+    target_plan_path: Optional[Path | str] = None,
+    product_cwd: Optional[Path | str] = None,
+    dry_run_report_path: Optional[Path | str] = None,
+    timeout_sec: int = 1800,
+) -> tuple[ExecutorProtocol, List[ExecutionScenario]]:
+    """Build a generic external-command executor + L2 scenarios from adapter.external.
+
+    Product-neutral: the core never learns the product's transport. The adapter
+    supplies a ``command`` returning structured ``observed_state`` (see
+    ExternalExecutor) and a list of ``scenarios`` bound to semantic-map entries;
+    each is evaluated by the standard L2 ``machine_check`` oracle.
+    """
+    adapter = _load_json_mapping(Path(adapter_path))
+    _enforce_owner_gate(adapter)
+    external = adapter.get("external")
+    if not isinstance(external, Mapping):
+        raise SchemaError("adapter.external is required for --executor external")
+    command = external.get("command")
+    dry_states: Optional[Dict[str, Mapping[str, Any]]] = None
+    if dry_run_report_path is not None:
+        raw = _load_json_mapping(Path(dry_run_report_path))
+        states = raw.get("observed_states") if isinstance(raw.get("observed_states"), Mapping) else raw
+        dry_states = {str(k): v for k, v in states.items() if isinstance(v, Mapping)}
+    elif not (isinstance(command, list) and command and all(isinstance(c, str) for c in command)):
+        raise SchemaError("adapter.external.command must be a non-empty list of strings")
+    # __EXTERNAL_BUILDER_TAIL__
+    sem_file = Path(semantic_map_path) if semantic_map_path else None
+    if sem_file is None:
+        try:
+            sem_file = _resolve_semantic_map_path(
+                adapter_path=Path(adapter_path), adapter=adapter, semantic_map_path=None
+            )
+        except SchemaError:
+            sem_file = None
+    semantic_entries: Mapping[str, Mapping[str, Any]] = {}
+    if sem_file is not None and Path(sem_file).is_file():
+        semantic_entries = _load_semantic_entries_by_id(Path(sem_file))
+
+    raw_scenarios = external.get("scenarios")
+    if not isinstance(raw_scenarios, list) or not raw_scenarios:
+        raise SchemaError("adapter.external.scenarios must be a non-empty list")
+    scenarios: List[ExecutionScenario] = []
+    for index, item in enumerate(raw_scenarios):
+        if not isinstance(item, Mapping):
+            raise SchemaError(f"adapter.external.scenarios[{index}] must be an object")
+        entry_id = str(item.get("semantic_map_entry_id") or "").strip()
+        if not entry_id:
+            raise SchemaError(f"adapter.external.scenarios[{index}].semantic_map_entry_id is required")
+        entry = semantic_entries.get(entry_id)
+        if not entry:
+            raise SchemaError(
+                f"adapter.external.scenarios[{index}].semantic_map_entry_id "
+                f"not found in semantic map: {entry_id}"
+            )
+        scenarios.append(
+            ExecutionScenario(
+                scenario_id=str(item.get("scenario_id") or f"ext-{index}"),
+                step_id="terminal",
+                test_cmd=str(item.get("test_cmd") or entry_id),
+                semantic_map_entry=entry,
+                llm_involvement=str(item.get("llm_involvement") or "none"),
+                oracle_level="L2",
+                oracle_strategy="machine_check",
+            )
+        )
+    scenarios = _filter_scenarios_by_target_plan(
+        scenarios, target_plan_path=target_plan_path, oracle_level="L2"
+    )
+    executor = ExternalExecutor(
+        list(command or []),
+        product_cwd=Path(product_cwd) if product_cwd else None,
+        timeout_sec=timeout_sec,
+        dry_run_states=dry_states,
     )
     return executor, scenarios
 
@@ -2503,7 +2675,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--batch-id", default="dry-run-001")
     parser.add_argument("--product-version", default="product@offline")
     parser.add_argument("--environment-digest", default="offline")
-    parser.add_argument("--executor", choices=("mock", "playwright", "http", "l1-fuzz"), default="mock")
+    parser.add_argument("--executor", choices=("mock", "playwright", "http", "l1-fuzz", "external"), default="mock")
     parser.add_argument("--adapter", type=Path, help="Product adapter config for adapter-driven executors")
     parser.add_argument("--semantic-map", type=Path, help="Semantic map YAML; defaults to adapters/<product>/semantic-map.yaml")
     parser.add_argument("--product-cwd", type=Path, default=Path("."), help="Readonly product checkout for real executor runs")
@@ -2532,6 +2704,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         parser.error("--executor http requires --adapter")
     if args.executor == "l1-fuzz" and not args.adapter:
         parser.error("--executor l1-fuzz requires --adapter")
+    if args.executor == "external" and not args.adapter:
+        parser.error("--executor external requires --adapter")
     if args.enable_model_routing and not args.adapter:
         parser.error("--enable-model-routing requires --adapter")
     if args.model_budget_overlay and not args.enable_model_routing:
@@ -2571,6 +2745,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     http_scenarios: Sequence[ExecutionScenario] = ()
     l1_executor: Optional[ExecutorProtocol] = None
     l1_scenarios: Sequence[ExecutionScenario] = ()
+    external_executor: Optional[ExecutorProtocol] = None
+    external_scenarios: Sequence[ExecutionScenario] = ()
     if args.executor == "l1-fuzz":
         try:
             l1_executor, l1_scenarios = build_adapter_l1_fuzz_run(
@@ -2607,6 +2783,26 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 product_cwd=args.product_cwd,
                 dry_run_report_path=args.report if args.dry_run else None,
                 output_dir=args.output_dir,
+                timeout_sec=args.timeout_sec,
+            )
+        except SchemaError as exc:
+            print(
+                json.dumps(
+                    {"status": "adapter-error", "error": str(exc)},
+                    ensure_ascii=False,
+                    indent=2,
+                    sort_keys=True,
+                )
+            )
+            return 1
+    if args.executor == "external":
+        try:
+            external_executor, external_scenarios = build_adapter_external_run(
+                adapter_path=args.adapter,
+                semantic_map_path=args.semantic_map,
+                target_plan_path=args.target_plan,
+                product_cwd=args.product_cwd,
+                dry_run_report_path=args.report if args.dry_run else None,
                 timeout_sec=args.timeout_sec,
             )
         except SchemaError as exc:
@@ -2703,6 +2899,24 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 environment_digest=args.environment_digest,
                 sentinel_scenarios=[],
                 scenarios=http_scenarios,
+            )
+        elif args.executor == "external":
+            assert external_executor is not None
+            orchestrator = PipelineV2Orchestrator(
+                ledger=ledger,
+                executor=external_executor,
+                queue_path=args.queue,
+                brief_path=args.brief,
+                suggestion_path=args.suggestions,
+                semantic_map=semantic_map_for_suggestions,
+                model_router=model_router,
+            )
+            result = orchestrator.run_batch(
+                batch_id=args.batch_id,
+                product_version=args.product_version,
+                environment_digest=args.environment_digest,
+                sentinel_scenarios=[],
+                scenarios=external_scenarios,
             )
         else:
             sample = build_sample_dry_run(
