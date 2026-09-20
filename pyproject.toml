@@ -29,7 +29,16 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
 ]
 dynamic = ["version"]
-dependencies = []
+# The core loads YAML semantic/code maps, so PyYAML is the single required
+# runtime dependency. The MCP server (pipeline_v2_mcp) stays standard-library
+# only and imports nothing from here that pulls PyYAML at import time.
+dependencies = ["PyYAML>=6,<7"]
+
+[project.optional-dependencies]
+# Live product transport over WebSocket is only needed for real runs; the
+# offline gate suite and dry-runs never import it. Kept out of the core deps
+# so `pip install veripipe` stays lean.
+live = ["websocket-client>=1,<2"]
 
 [tool.setuptools.dynamic]
 version = { file = "VERSION" }

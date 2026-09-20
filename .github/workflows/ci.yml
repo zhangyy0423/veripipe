@@ -35,8 +35,16 @@ jobs:
           python3 --version
           bash --version | head -n1
 
-      # The full gate suite is standard-library only: bash-syntax,
-      # python-syntax, secret-scan, contract (Playwright dry-run + MCP
-      # smoke + product-neutrality) and unit (installer + engine + MCP).
+      # Install the package so its single runtime dependency (PyYAML) is present.
+      # PyYAML is required to load semantic/code maps in the contract gate's
+      # dry-run and in the knowledge-audit unit tests. The optional `live`
+      # extra (websocket-client) is intentionally NOT installed: the gate suite
+      # runs fully offline and never opens a live product transport.
+      - name: Install package (pulls PyYAML)
+        run: python3 -m pip install --disable-pip-version-check .
+
+      # After install the gate suite runs offline: bash-syntax, python-syntax,
+      # secret-scan, contract (Playwright dry-run + MCP smoke + product-neutrality)
+      # and unit (installer + engine + MCP). No network access is used by the gates.
       - name: Run CI gates
         run: bash scripts/ci/run-gates.sh

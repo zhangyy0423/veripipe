@@ -9,9 +9,9 @@ actually correct — false positives that cost human triage time and erode trust
 candidate findings and only lets a report through when structured evidence
 survives a fail-closed oracle chain.
 
-The core is dependency-free Python (standard library only) and ships with a
-manifest-driven installer and a zero-dependency MCP server so any MCP host can
-drive it.
+The core is Python with a single runtime dependency — **PyYAML**, used to load
+semantic/code maps — and ships with a manifest-driven installer and a
+zero-dependency MCP server so any MCP host can drive it.
 
 ---
 
@@ -73,7 +73,8 @@ and unreviewed product knowledge never live here.
 
 ## Requirements
 
-- Python **3.9+** (the core and the MCP server are standard-library only).
+- Python **3.9+**. The core needs **PyYAML** (its only runtime dependency);
+  the MCP server is standard-library only.
 - Optional, only for real browser runs: Node.js + Playwright in the *product*
   repo. `veripipe` shells out to the product's Playwright install; it does not
   bundle a browser.
@@ -93,7 +94,7 @@ python3 -m pipeline_v2.orchestrator --help
 As a package (once published):
 
 ```bash
-pip install veripipe          # installs the pipeline_v2 + pipeline_v2_mcp packages
+pip install veripipe          # installs pipeline_v2 + pipeline_v2_mcp (pulls PyYAML)
 ```
 
 ## Quickstart
@@ -204,7 +205,8 @@ server into a dsh host.
 
 ## Testing & CI
 
-All gates run offline with the standard library:
+All gates run offline. PyYAML is the only third-party dependency (it loads the
+semantic/code maps); everything else is the standard library:
 
 ```bash
 bash scripts/ci/run-gates.sh
