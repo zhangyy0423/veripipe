@@ -20,9 +20,26 @@ versioning.
   `oracle_level ∈ {L1,L2,L3}` and `llm_involvement == none`; deduped by
   fingerprint, capped, neutral bodies, automated-disclosure footer. The `gh`
   boundary is injectable and covered by offline unit tests.
-- **Docs.** `docs/adapters.md` now documents the executor matrix and the
-  bring-your-own-transport pattern.
-- **CI.** A `tests/contract/external.sh` gate exercises the `external` executor
+- **Methodology.** `docs/methodology.md` writes up the anti-false-positive
+  method on its own terms (the one rule, the L1–L3 ladder with L4 quarantined,
+  veto-only models, fail-closed, structured-state-not-text, neutral engine,
+  low-noise publishing, worked examples).
+- **Runnable demo.** `examples/demo.py` walks one contract through three agent
+  runs (pass / machine-verified failure / inconclusive) on neutral fixtures,
+  with an offline test.
+- **Funnel summary.** `pipeline_v2.fp_report` aggregates orchestrator result
+  JSON(s) into an auditable number: candidate checks executed, filed as
+  machine-verified findings, and withheld (with rates).
+- **GitHub Action.** A composite `action.yml` writes the funnel summary to the
+  CI job summary and can fail a step on any filed finding (`fail-on-filed`).
+- **Second neutral product.** A `notes` fixture and `second-product.sh` contract
+  drive a second, unrelated product end-to-end through the same core.
+- **Docs.** `docs/adapters.md` documents the executor matrix and the
+  bring-your-own-transport pattern; `docs/publish-github.md` and
+  `docs/github-action.md` added; README carries a Documentation index and a
+  60-second demo in the Quickstart.
+- **CI.** Contract gates `tests/contract/external.sh` and
+  `tests/contract/second-product.sh` exercise the `external` executor
   end-to-end against neutral fixtures.
 
 ### Changed
