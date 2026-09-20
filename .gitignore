@@ -16,6 +16,11 @@ output
 *.local.env
 configs/*.env
 
+# private product adapters (real products stay local; the public tree ships
+# only the neutral fixture at tests/fixtures/products/sample). Origin-specific
+# product knowledge, hosts, and skills never enter the public history.
+/products/
+
 # private product-neutrality denylist (origin tokens stay out of the public tree)
 *.denylist
 tests/contract/neutrality.denylist
