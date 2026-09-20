@@ -1,0 +1,75 @@
+schema_version: 1
+product: svc
+based_on_product_commit: fixture
+source_commit_label: svc@fixture
+source_paths:
+  - svc/runtime
+entries:
+  - id: svc.health.all-green
+    skill:
+      name: healthcheck
+      description: A neutral fixture service whose subsystems must all be healthy.
+      anchor:
+        path: svc/runtime
+        line: 1
+        section: health
+    flow:
+      summary: Run a health check; every subsystem must report healthy.
+      steps:
+        - id: check
+          action: Probe the subsystems.
+          anchor:
+            path: svc/runtime
+            line: 1
+            section: health
+    expected_terminal_state:
+      assertion: db and cache and queue are all healthy
+      observable: Structured health map with a boolean per subsystem.
+      assertion_type: resource_state
+      machine_check:
+        op: all_true
+        fields:
+          - db
+          - cache
+          - queue
+      anchor:
+        path: svc/runtime
+        line: 1
+        section: health
+    anchors:
+      - path: svc/runtime
+        line: 1
+        section: health
+  - id: svc.release.published
+    skill:
+      name: publish_release
+      description: A release must reach the published terminal state.
+      anchor:
+        path: svc/runtime
+        line: 1
+        section: release
+    flow:
+      summary: Publish a release; the released flag must be true.
+      steps:
+        - id: publish
+          action: Publish.
+          anchor:
+            path: svc/runtime
+            line: 1
+            section: release
+    expected_terminal_state:
+      assertion: released == true
+      observable: Structured release record.
+      assertion_type: release_state
+      machine_check:
+        field: released
+        op: eq
+        value: true
+      anchor:
+        path: svc/runtime
+        line: 1
+        section: release
+    anchors:
+      - path: svc/runtime
+        line: 1
+        section: release

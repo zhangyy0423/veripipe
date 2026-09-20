@@ -1,0 +1,13 @@
+{
+  "product": "svc",
+  "version": "0.1.0",
+  "framework_version": "0.1.0",
+  "production_write_default": false,
+  "external": {
+    "command": ["python3", "-c", "import sys,json;json.dump({'observed_state':{}},sys.stdout)"],
+    "scenarios": [
+      {"scenario_id": "svc-health", "semantic_map_entry_id": "svc.health.all-green"},
+      {"scenario_id": "svc-release", "semantic_map_entry_id": "svc.release.published"}
+    ]
+  }
+}

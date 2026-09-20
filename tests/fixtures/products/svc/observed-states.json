@@ -1,0 +1,6 @@
+{
+  "observed_states": {
+    "svc.health.all-green": {"db": true, "cache": true, "queue": false},
+    "svc.release.published": {"released": true}
+  }
+}
