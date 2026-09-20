@@ -38,9 +38,18 @@ versioning.
   bring-your-own-transport pattern; `docs/publish-github.md` and
   `docs/github-action.md` added; README carries a Documentation index and a
   60-second demo in the Quickstart.
-- **CI.** Contract gates `tests/contract/external.sh` and
-  `tests/contract/second-product.sh` exercise the `external` executor
-  end-to-end against neutral fixtures.
+- **Adoption guide.** `docs/adoption.md` (try / install / run / wire an MCP host
+  / point at a product / gate CI) plus a `CONTRIBUTING.md` and issue/PR
+  templates; the README first screen states value, audience, and a one-command
+  try.
+- **Demo material.** `examples/demo.cast` (an asciinema recording of the real
+  demo) and `examples/record-demo.sh`.
+- **Funnel trend.** `pipeline_v2.fp_report --trend` shows filed/withheld per
+  batch over time with an aggregate row.
+- **CI.** Contract gates `tests/contract/external.sh`,
+  `tests/contract/second-product.sh`, and `tests/contract/third-product.sh`
+  exercise the `external` executor end-to-end against three differently-shaped
+  neutral fixtures (`notes`: count/contains_key; `svc`: all_true/eq).
 
 ### Changed
 - Declared **PyYAML** as the single runtime dependency (used to load
