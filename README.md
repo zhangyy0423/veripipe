@@ -12,6 +12,18 @@ The core is Python with a single runtime dependency — **PyYAML**, used to load
 semantic/code maps — and ships with a manifest-driven installer and a
 zero-dependency MCP server so any MCP host can drive it.
 
+**Who it's for:** teams running AI agents against web/HTTP products who are
+tired of triaging confident-but-wrong bug reports.
+
+**Try it in one command** (offline, no install, no product):
+
+```bash
+python3 examples/demo.py
+```
+
+One contract, three agent runs — a real success, a false "done," and an
+unbacked claim — and only the machine-verified failure is filed.
+
 ---
 
 ## The problem it solves
