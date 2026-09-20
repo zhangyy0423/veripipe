@@ -1,0 +1,73 @@
+schema_version: 1
+product: notes
+based_on_product_commit: fixture
+source_commit_label: notes@fixture
+source_paths:
+  - notes/store
+entries:
+  - id: notes.note.created
+    skill:
+      name: create_note
+      description: A neutral fixture product that stores notes.
+      anchor:
+        path: notes/store
+        line: 1
+        section: create
+    flow:
+      summary: Create a note; at least one record must exist afterwards.
+      steps:
+        - id: create
+          action: Store a note.
+          anchor:
+            path: notes/store
+            line: 1
+            section: create
+    expected_terminal_state:
+      assertion: note_count >= 1
+      observable: Structured note store; number of stored records.
+      assertion_type: record_count
+      machine_check:
+        field: note_count
+        op: count_ge
+        value: 1
+      anchor:
+        path: notes/store
+        line: 1
+        section: create
+    anchors:
+      - path: notes/store
+        line: 1
+        section: create
+  - id: notes.note.tagged
+    skill:
+      name: tag_note
+      description: A note must carry the required tag after tagging.
+      anchor:
+        path: notes/store
+        line: 1
+        section: tag
+    flow:
+      summary: Tag a note; the tag map must contain the required key.
+      steps:
+        - id: tag
+          action: Add the required tag.
+          anchor:
+            path: notes/store
+            line: 1
+            section: tag
+    expected_terminal_state:
+      assertion: tags contains "urgent"
+      observable: Structured tag map on the note.
+      assertion_type: tool_payload_state
+      machine_check:
+        field: tags
+        op: contains_key
+        value: urgent
+      anchor:
+        path: notes/store
+        line: 1
+        section: tag
+    anchors:
+      - path: notes/store
+        line: 1
+        section: tag

@@ -1,0 +1,13 @@
+{
+  "product": "notes",
+  "version": "0.1.0",
+  "framework_version": "0.1.0",
+  "production_write_default": false,
+  "external": {
+    "command": ["python3", "-c", "import sys,json;json.dump({'observed_state':{}},sys.stdout)"],
+    "scenarios": [
+      {"scenario_id": "notes-create", "semantic_map_entry_id": "notes.note.created"},
+      {"scenario_id": "notes-tag", "semantic_map_entry_id": "notes.note.tagged"}
+    ]
+  }
+}

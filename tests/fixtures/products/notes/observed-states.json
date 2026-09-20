@@ -1,0 +1,6 @@
+{
+  "observed_states": {
+    "notes.note.created": {"note_count": 2},
+    "notes.note.tagged": {"tags": {"other": true}}
+  }
+}
