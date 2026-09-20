@@ -2,6 +2,8 @@
 
 **An anti-false-positive verification pipeline for AI agents that test web/HTTP products.**
 
+*中文名「执簿判官」——凭簿断案，无据不判。*
+
 AI agents are good at finding candidate bugs but not at proving them.
 Unchecked, they file confident, well-formed reports for behaviour that is in
 fact correct, and triaging those often costs more than the real defects.
