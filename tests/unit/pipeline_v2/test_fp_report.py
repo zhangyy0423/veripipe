@@ -2,7 +2,7 @@
 """Offline tests for the anti-false-positive funnel summary."""
 import unittest
 
-from pipeline_v2.fp_report import render, summarize
+from pipeline_v2.fp_report import render, render_trend, summarize, trend
 
 
 class FpReportTest(unittest.TestCase):
@@ -35,6 +35,25 @@ class FpReportTest(unittest.TestCase):
                                  "pass_count": 2, "no_signal_count": 1}]))
         self.assertIn("filed as machine-verified findings: 1", out)
         self.assertIn("filed rate: 25%", out)
+
+    def test_trend_is_one_row_per_batch_in_order(self):
+        rows = trend([
+            {"batch_id": "b1", "executed_count": 4, "reported_count": 2},
+            {"batch_id": "b2", "executed_count": 4, "reported_count": 1},
+            {"executed_count": 2, "reported_count": 0},  # no batch_id -> labelled
+        ])
+        self.assertEqual([r["batch"] for r in rows], ["b1", "b2", "batch-3"])
+        self.assertEqual([r["filed"] for r in rows], [2, 1, 0])
+        self.assertEqual(rows[0]["filed_rate"], 0.5)
+
+    def test_render_trend_has_rows_and_total(self):
+        out = render_trend(trend([
+            {"batch_id": "b1", "executed_count": 4, "reported_count": 2},
+            {"batch_id": "b2", "executed_count": 6, "reported_count": 1},
+        ]))
+        self.assertIn("| b1 | 4 | 2 |", out)
+        self.assertIn("| **all** | 10 | 3 |", out)
+        self.assertIn("30%", out)
 
 
 if __name__ == "__main__":
