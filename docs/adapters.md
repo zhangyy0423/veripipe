@@ -75,6 +75,37 @@ Safety properties enforced by the installer and covered by tests:
   (e.g. a `.tmp/` ledger), even with a tampered manifest and `--force`;
 - fails closed on duplicate managed paths or an unsupported manifest schema.
 
+## Executors & custom transports
+
+`veripipe` runs each scenario through an `ExecutorProtocol` boundary
+(`run(test_cmd, scenario) -> observed_state`). The core ships four executors,
+selected with `--executor`:
+
+| Executor | Adapter block | Oracle | Use |
+| --- | --- | --- | --- |
+| `mock` | — | L2 | offline contract fixture |
+| `playwright` | `playwright` | L2 (spec-as-oracle) | JSON-reporter spec runs |
+| `http` | `http_driver` | L3 (differential / metamorphic) + bounded L1 | HTTP/WS products |
+| `l1-fuzz` | `l1_fuzz` | L1 | malformed-input robustness |
+
+If a product speaks a protocol none of these cover, keep the core neutral and
+add the transport **in the private adapter**, using the engine as a library:
+
+1. Drive the product with your own transport and fold the result into a
+   **structured `observed_state`** dict — never agent output text.
+2. `evaluate_l2_oracle(entry, observed_state, ...)` returns a tri-state verdict
+   (`pass` / measured failure / `inconclusive`; it fails closed).
+3. On a machine-verified failure, `failure_fingerprint(signal)` +
+   `build_queue_event("bug_report", payload)` append a reviewable event to a
+   queue JSONL.
+4. Hand the queue to the `publish-github` skill to stage a human-reviewed draft
+   (see `shared-skills/publish-github/SKILL.md`).
+
+Only structured state crosses the boundary, so a product-specific transport
+(for example a WebSocket RPC mux) can be supported without teaching the core
+anything product-specific. The transport, its endpoints, and its event names
+stay in the private adapter.
+
 ## Confidentiality
 
 Keep product source, internal prompts, intranet addresses, project
