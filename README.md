@@ -2,12 +2,11 @@
 
 **An anti-false-positive verification pipeline for AI agents that test web/HTTP products.**
 
-AI agents are good at *finding* candidate bugs and bad at *proving* them. Left
-unchecked they file confident, well-written reports for behaviour that is
-actually correct — false positives that cost human triage time and erode trust.
-`veripipe` is the guardrail: a product-neutral pipeline that takes an agent's
-candidate findings and only lets a report through when structured evidence
-survives a fail-closed oracle chain.
+AI agents are good at finding candidate bugs but not at proving them.
+Unchecked, they file confident, well-formed reports for behaviour that is in
+fact correct, and triaging those often costs more than the real defects.
+`veripipe` passes a candidate finding only when structured, reproducible
+evidence survives a fail-closed oracle chain.
 
 The core is Python with a single runtime dependency — **PyYAML**, used to load
 semantic/code maps — and ships with a manifest-driven installer and a
