@@ -54,7 +54,8 @@ A raw agent loop tends to fail in three ways:
   CLI, without adding product code to the neutral core.
 - **GitHub publishing skill.** `publish-github` turns machine-verified findings
   into GitHub Discussion/Issue drafts: dry-run by default, verified-only,
-  deduped, each with an automated-disclosure footer.
+  deduped, each with an automated-disclosure footer. See
+  [`docs/publish-github.md`](docs/publish-github.md).
 - **Product-neutral by contract.** The core imports no product drivers and
   contains no product names or identifiers; a CI gate greps for leaks and runs
   the engine against a neutral `sample` fixture.
