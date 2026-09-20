@@ -1,0 +1,41 @@
+name: "veripipe funnel summary"
+description: "Summarize an anti-false-positive verification run: candidate checks executed, filed as machine-verified findings, and withheld."
+branding:
+  icon: "filter"
+  color: "gray-dark"
+inputs:
+  result:
+    description: "Path to an orchestrator result JSON (the output of `python3 -m pipeline_v2.orchestrator`)."
+    required: true
+  python-version:
+    description: "Python version to set up."
+    required: false
+    default: "3.12"
+  fail-on-filed:
+    description: "Fail the step if any finding was filed (default false)."
+    required: false
+    default: "false"
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+    - name: Install runtime dependency
+      shell: bash
+      run: python3 -m pip install --disable-pip-version-check "PyYAML>=6,<7"
+    - name: Summarize the funnel
+      shell: bash
+      env:
+        PYTHONPATH: ${{ github.action_path }}/shared-skills/pipeline-v2/scripts
+      run: |
+        set -euo pipefail
+        python3 -m pipeline_v2.fp_report --result "${{ inputs.result }}" | tee -a "$GITHUB_STEP_SUMMARY"
+        filed="$(python3 -m pipeline_v2.fp_report --result "${{ inputs.result }}" --json \
+                 | python3 -c 'import json,sys; print(json.load(sys.stdin)["filed"])')"
+        echo "veripipe_filed=$filed" >> "$GITHUB_OUTPUT" 2>/dev/null || true
+        if [ "${{ inputs.fail-on-filed }}" = "true" ] && [ "$filed" -gt 0 ]; then
+          echo "::error::veripipe filed $filed machine-verified finding(s)"
+          exit 1
+        fi

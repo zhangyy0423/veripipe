@@ -228,6 +228,7 @@ server into a dsh host.
   executor matrix, and the bring-your-own-transport pattern.
 - [`docs/publish-github.md`](docs/publish-github.md) — filing machine-verified
   findings to GitHub Discussions/Issues (dry-run first, verified-only).
+- [`docs/github-action.md`](docs/github-action.md) — a composite Action that summarizes a run in CI.
 - [`docs/testing.md`](docs/testing.md) — the gate suite and the product-bound
   test hold-out strategy.
 - [`docs/dsh-plugin.md`](docs/dsh-plugin.md) — wiring the skills and the MCP
