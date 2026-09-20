@@ -211,6 +211,17 @@ server into a dsh host.
 > engine and move with the framework. Any product-specific graph, map, or
 > knowledge content is generated in the product repo and stays private.
 
+## Documentation
+
+- [`docs/adapters.md`](docs/adapters.md) — adapter layout, host mapping, the
+  executor matrix, and the bring-your-own-transport pattern.
+- [`docs/publish-github.md`](docs/publish-github.md) — filing machine-verified
+  findings to GitHub Discussions/Issues (dry-run first, verified-only).
+- [`docs/testing.md`](docs/testing.md) — the gate suite and the product-bound
+  test hold-out strategy.
+- [`docs/dsh-plugin.md`](docs/dsh-plugin.md) — wiring the skills and the MCP
+  server into a dsh host.
+
 ## Testing & CI
 
 All gates run offline. PyYAML is the only third-party dependency (it loads the
