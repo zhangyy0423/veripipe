@@ -6,11 +6,13 @@
 
 *中文名「执簿判官」——凭簿断案，无据不判。*
 
-AI agents are good at finding candidate bugs but not at proving them.
-Unchecked, they file confident, well-formed reports for behaviour that is in
-fact correct, and triaging those often costs more than the real defects.
-`veripipe` passes a candidate finding only when structured, reproducible
-evidence survives a fail-closed oracle chain.
+An agent reports "done." The reply reads finished — confident and well-formed —
+but the task isn't actually complete, and nothing proved that it was. When the
+agents in question are testing a web or HTTP product, the same gap shows up as
+confident bug reports for behaviour that is in fact correct, and triaging those
+false positives often costs more than the real defects. `veripipe` treats the
+agent's wording as a claim, not as evidence: a candidate finding passes only
+when structured, reproducible evidence survives a fail-closed oracle chain.
 
 The core is Python with a single runtime dependency — **PyYAML**, used to load
 semantic/code maps — and ships with a manifest-driven installer and a
@@ -26,7 +28,9 @@ python3 examples/demo.py
 ```
 
 One contract, three agent runs — a real success, a false "done," and an
-unbacked claim — and only the machine-verified failure is filed.
+unbacked claim. Only the machine-verified failure is filed: the
+confident-but-wrong "done" is caught, while the words-only claim is held
+inconclusive and filed nowhere.
 
 ---
 
