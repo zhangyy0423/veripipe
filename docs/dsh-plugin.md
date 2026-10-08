@@ -66,6 +66,17 @@ printf '%s\n%s\n%s\n' \
 The server replies with the negotiated `protocolVersion` and the tool list on
 stdout; diagnostics go to stderr.
 
+## Turn-end receipts (separate host plugin)
+
+A dsh host clears its `todos` session projection when the next turn starts, so
+a verifier that reads a session after the run can miss a plan the agent did
+finish. [`dsh-veripipe`](https://github.com/zhangyy0423/dsh-veripipe) is a
+separate host plugin that keeps one receipt per turn end (todo counts, goal
+id/phase/revision, and a fail-closed `pass` / `fail` / `inconclusive` plan
+verdict) and is installed with the host's own plugin command. It is maintained
+outside this repository so the core stays host-neutral; veripipe does not
+require it.
+
 ## Confidentiality
 
 The plugin ships only the neutral engine, the MCP surface, and the installer.
