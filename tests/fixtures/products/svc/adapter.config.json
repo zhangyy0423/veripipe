@@ -1,7 +1,7 @@
 {
   "product": "svc",
   "version": "0.1.0",
-  "framework_version": "0.1.0",
+  "framework_version": "0.1.1",
   "production_write_default": false,
   "external": {
     "command": ["python3", "-c", "import sys,json;json.dump({'observed_state':{}},sys.stdout)"],

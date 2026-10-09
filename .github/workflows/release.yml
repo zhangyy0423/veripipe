@@ -1,9 +1,12 @@
 name: Release to PyPI
 
-# Publishes with PyPI Trusted Publishing (OIDC): no API token is stored anywhere.
-# One-time setup on pypi.org (account owner): add a pending publisher for project
-# "veripipe" -> owner zhangyy0423, repository veripipe, workflow release.yml,
-# environment pypi. Until that exists, the publish job fails and nothing is uploaded.
+# Builds and checks the distribution on every published release. Publishing uses
+# PyPI Trusted Publishing (OIDC), so no API token is stored anywhere, and runs
+# only when the repository variable PYPI_TRUSTED_PUBLISHING is "true".
+# One-time setup (account owner): on pypi.org, project veripipe -> Publishing,
+# add a GitHub publisher (owner zhangyy0423, repository veripipe, workflow
+# release.yml, environment pypi); then set the variable:
+#   gh variable set PYPI_TRUSTED_PUBLISHING --body true -R zhangyy0423/veripipe
 on:
   release:
     types: [published]
@@ -49,6 +52,7 @@ jobs:
   publish:
     name: publish to PyPI
     needs: build
+    if: vars.PYPI_TRUSTED_PUBLISHING == 'true'
     runs-on: ubuntu-latest
     environment: pypi
     permissions:

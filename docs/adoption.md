@@ -34,13 +34,13 @@ export PYTHONPATH="$PWD/shared-skills/pipeline-v2/scripts:$PYTHONPATH"
 python3 -m pipeline_v2.orchestrator --help
 ```
 
-From GitHub (no PyPI account needed):
+From PyPI:
 
 ```bash
-pip install "git+https://github.com/zhangyy0423/veripipe"
+pip install veripipe
 ```
 
-Or, once published: `pip install veripipe`.
+Or the latest `main` from GitHub: `pip install "git+https://github.com/zhangyy0423/veripipe"`.
 
 ## Run a batch
 

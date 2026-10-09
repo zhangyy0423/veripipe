@@ -6,6 +6,32 @@ versioning.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-09
+
+### Added
+- First release on PyPI: `pip install veripipe`.
+- `.github/workflows/release.yml`: on a published GitHub release, builds the
+  sdist and wheel, checks the wheel imports and that the tag matches `VERSION`.
+  Publishing through PyPI trusted publishing runs only when the repository
+  variable `PYPI_TRUSTED_PUBLISHING` is `true`.
+- Project URLs and author in the package metadata.
+
+### Changed
+- The README opens with the agent that reports "done" without the task being
+  complete, then narrows to web/HTTP product testing; the demo paragraph names
+  all three outcomes. Chinese name (执簿判官), slogan, and banner line added.
+- Install instructions lead with PyPI.
+- Adapters must declare `framework_version: "0.1.1"`; the installer still
+  requires an exact match with `VERSION`. The neutral fixtures are updated.
+- `docs/dsh-plugin.md` points to the separate `dsh-veripipe` host plugin for
+  turn-end receipts.
+
+## [0.1.0] - 2026-09-20
+
+Everything in this section is in the `v0.1.0` tag and its GitHub release
+assets. The first two lists were recorded under "Unreleased" before the tag was
+cut and were never moved.
+
 ### Added
 - **`external` executor.** A product-neutral `--executor external` that runs a
   product-provided command (from the owner-gated `adapter.external` block)
@@ -57,9 +83,7 @@ versioning.
   "standard-library only (core)" wording. The MCP server remains
   standard-library only (zero third-party dependencies).
 
-## [0.1.0]
-
-### Added
+### Added (initial cut)
 - Product-neutral verification core (`pipeline_v2`): L1–L3 oracle chain,
   structured L2 terminal-state oracle, asymmetric LLM veto, fail-closed
   behaviour, SQLite ledger, funnel, one-page batch brief.

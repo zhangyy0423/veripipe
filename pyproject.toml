@@ -7,6 +7,7 @@ name = "veripipe"
 description = "Anti-false-positive verification pipeline for AI agents testing web/HTTP products"
 readme = "README.md"
 requires-python = ">=3.9"
+authors = [{ name = "zhangyuyu03" }]
 license = { file = "LICENSE" }
 keywords = [
     "ai-agents",
@@ -39,6 +40,12 @@ dependencies = ["PyYAML>=6,<7"]
 # offline gate suite and dry-runs never import it. Kept out of the core deps
 # so `pip install veripipe` stays lean.
 live = ["websocket-client>=1,<2"]
+
+[project.urls]
+Homepage = "https://github.com/zhangyy0423/veripipe"
+Repository = "https://github.com/zhangyy0423/veripipe"
+Changelog = "https://github.com/zhangyy0423/veripipe/blob/main/CHANGELOG.md"
+Issues = "https://github.com/zhangyy0423/veripipe/issues"
 
 [tool.setuptools.dynamic]
 version = { file = "VERSION" }

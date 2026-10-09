@@ -15,9 +15,9 @@ def _resolve_version() -> str:
         try:
             return version("veripipe")
         except PackageNotFoundError:
-            return "0.1.0+source"
+            return "0.1.1+source"
     except Exception:  # pragma: no cover - importlib always present on 3.9+
-        return "0.1.0+source"
+        return "0.1.1+source"
 
 
 __version__ = _resolve_version()

@@ -1,7 +1,7 @@
 {
   "product": "sample-product",
   "version": "0.1.0",
-  "framework_version": "0.1.0",
+  "framework_version": "0.1.1",
   "production_write_default": false,
   "model_routing": {
     "enabled": false,
