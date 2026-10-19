@@ -21,11 +21,10 @@ zero-dependency MCP server so any MCP host can drive it.
 **Who it's for:** teams running AI agents against web/HTTP products who are
 tired of triaging confident-but-wrong bug reports.
 
-**Get it:** [![PyPI](https://img.shields.io/badge/PyPI-veripipe%200.1.1-blue?logo=pypi)](https://pypi.org/project/veripipe/)
-`pip install veripipe` · listed in
-[awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin)
-as the [`dsh-veripipe`](https://github.com/zhangyy0423/dsh-veripipe) host plugin
-(per-turn completion receipts).
+**Get it:** `pip install veripipe` — v0.1.1 on [PyPI](https://pypi.org/project/veripipe/).
+For dsh hosts: the [`dsh-veripipe`](https://github.com/zhangyy0423/dsh-veripipe)
+plugin (per-turn completion receipts) is listed in
+[awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin).
 
 **Try it in one command** (offline, no install, no product):
 
