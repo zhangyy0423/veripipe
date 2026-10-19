@@ -77,6 +77,7 @@ class ExecutionResult:
     stderr: str = ""
     stdout: str = ""
     environment_unavailable: bool = False
+    observed_at: Optional[str] = None
 
 
 class EnvironmentUnavailable(RuntimeError):
@@ -138,6 +139,7 @@ def _external_result_from_payload(
     if isinstance(payload, Mapping) and isinstance(payload.get("observed_state"), Mapping):
         return ExecutionResult(
             observed_state=dict(payload["observed_state"]),
+            observed_at=str(payload.get("observed_at")) if payload.get("observed_at") else None,
             raw_failure=str(payload.get("raw_failure") or ""),
             exit_code=int(payload.get("exit_code", exit_code) or 0),
             stdout=stdout,
@@ -604,6 +606,7 @@ class PipelineV2Orchestrator:
             llm_involvement=scenario.llm_involvement,
             nondeterministic_sources=list(scenario.nondeterministic_sources),
             static_certified=scenario.static_certified,
+            observed_at=result.observed_at,
         )
         if oracle.failure_signal is None:
             if oracle.status == "inconclusive":

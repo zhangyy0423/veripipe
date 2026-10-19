@@ -124,6 +124,33 @@ stay in the private adapter. (You can also drive the engine as a library —
 `evaluate_l2_oracle` → `failure_fingerprint` → `build_queue_event` → the
 `publish-github` skill — when you need full control.)
 
+## Sampling-time contract (`observed_when`)
+
+`machine_check` verdicts assume a terminal state read at a well-defined moment.
+When the product's own state can change between the scenario and the read
+(e.g. a harness projection cleared at the next turn start), the adapter may
+declare that moment in the semantic-map entry:
+
+```
+expected_terminal_state:
+  observed_when: turn-end-fold   # the executor folds events up to the turn's end
+```
+
+The `external` executor returns the actual sampling method the command used:
+
+```
+{"observed_state": {...}, "observed_at": "turn-end-fold"}
+```
+
+Rules: an entry that declares `observed_when` is **fail-closed** unless the
+executor reports exactly the same `observed_at` — no declaration, no verdict
+(`observed_when.undeclared`); a different method is
+`observed_when.mismatch`. Entries without `observed_when` behave as before.
+The mismatch is an `observation`-class hold-back: fix the collection, not the
+map. (Self-reported `observed_at` is a contract audit, not tamper protection;
+for a host-side guarantee, pair this with a receipt-style projection such as
+the `dsh-veripipe` plugin.)
+
 ## Confidentiality
 
 Keep product source, internal prompts, intranet addresses, project

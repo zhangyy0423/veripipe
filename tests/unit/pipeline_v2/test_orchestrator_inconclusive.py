@@ -31,11 +31,13 @@ ENTRY = {
 
 
 class FixedExecutor:
-    def __init__(self, observed):
+    def __init__(self, observed, observed_at=None):
         self._observed = observed
+        self._observed_at = observed_at
 
     def run(self, *, test_cmd, scenario):
-        return ExecutionResult(observed_state=self._observed, exit_code=0)
+        return ExecutionResult(observed_state=self._observed, exit_code=0,
+                               observed_at=self._observed_at)
 
 
 class OrchestratorInconclusiveTest(unittest.TestCase):
@@ -96,3 +98,34 @@ class OrchestratorInconclusiveTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ObservedWhenContractTest(OrchestratorInconclusiveTest):
+    """An entry that declares observed_when forces the sampling method."""
+
+    def _entry(self, observed_when):
+        entry = dict(ENTRY)
+        entry["expected_terminal_state"] = dict(ENTRY["expected_terminal_state"])
+        entry["expected_terminal_state"]["observed_when"] = observed_when
+        return entry
+
+    def test_undeclared_sampling_holds_back_with_observation_reason(self):
+        out, _tmp = self._run(FixedExecutor({"ready": True}),
+                              ExecutionScenario(
+                                  scenario_id="hop-ts", step_id="terminal", test_cmd="hop",
+                                  oracle_level="L2", oracle_strategy="machine_check",
+                                  llm_involvement="none",
+                                  semantic_map_entry=self._entry("turn-end-fold")))
+        self.assertEqual(out.inconclusive_count, 1)
+        self.assertEqual(out.frustration_reasons["hop-ts"], "observation: observed_when.undeclared")
+
+    def test_wrong_sampling_method_holds_back_with_mismatch_reason(self):
+        executor = FixedExecutor({"ready": True}, observed_at="live-projection")
+        out, _tmp = self._run(executor,
+                              ExecutionScenario(
+                                  scenario_id="hop-ts2", step_id="terminal", test_cmd="hop",
+                                  oracle_level="L2", oracle_strategy="machine_check",
+                                  llm_involvement="none",
+                                  semantic_map_entry=self._entry("turn-end-fold")))
+        self.assertEqual(out.inconclusive_count, 1)
+        self.assertIn("observed_when.mismatch", out.frustration_reasons["hop-ts2"])

@@ -66,6 +66,8 @@ class OracleL2Result:
     expected_state: Dict[str, Any] = field(default_factory=dict)
     actual_state: Dict[str, Any] = field(default_factory=dict)
     diff: Dict[str, Any] = field(default_factory=dict)
+    observed_at: Optional[str] = None
+    observed_when: str = "unspecified"
     failure_signal: Optional[FailureSignal] = None
 
     def as_evidence(self) -> Dict[str, Any]:
@@ -81,6 +83,8 @@ class OracleL2Result:
             "expected_state": self.expected_state,
             "actual_state": self.actual_state,
             "diff": self.diff,
+            "observed_at": self.observed_at,
+            "observed_when": self.observed_when,
         }
 
     @property
@@ -101,6 +105,8 @@ class OracleL2Result:
             return "contract"
         if reason in ("observed_state", "observed_state.field", "observed_state.value_from",
                       "observed_state.not_mapping", "observed_state.count"):
+            return "observation"
+        if reason.startswith("observed_when"):
             return "observation"
         if reason == "environment_unavailable" or "environment" in reason:
             return "environment"
@@ -166,13 +172,40 @@ def evaluate_l2_oracle(
     llm_involvement: str,
     nondeterministic_sources: Optional[List[str]] = None,
     static_certified: bool = False,
+    observed_at: Optional[str] = None,
 ) -> OracleL2Result:
-    """Evaluate one semantic-map entry against one observed terminal state."""
+    """Evaluate one semantic-map entry against one observed terminal state.
 
+    ``observed_at`` is the sampling method the executor actually used
+    (e.g. ``turn-end-fold``, ``command-post-scenario``); when the semantic-map
+    entry declares ``expected_terminal_state.observed_when``, only a matching
+    sampling method may produce a verdict. Anything else is fail-closed
+    inconclusive with an ``observed_when`` reason, because judging a state
+    that was read at the wrong moment is exactly the kind of confident
+    nonsense veripipe exists to refuse.
+    """
+
+    declared_when = None
     entry_id = str(entry.get("id", "")).strip()
     expected_terminal = entry.get("expected_terminal_state")
+    if isinstance(expected_terminal, Mapping):
+        raw_when = expected_terminal.get("observed_when")
+        if raw_when is not None:
+            declared_when = str(raw_when).strip() or None
     if not isinstance(expected_terminal, Mapping):
-        return _inconclusive(entry_id, "", {}, {}, "expected_terminal_state")
+        return _inconclusive(entry_id, "", {}, {}, "expected_terminal_state", observed_at)
+    if declared_when:
+        if not observed_at:
+            return _inconclusive(
+                entry_id, "", {}, {}, "observed_when.undeclared",
+                observed_at=observed_at, observed_when=str(declared_when),
+            )
+        if str(observed_at) != declared_when:
+            return _inconclusive(
+                entry_id, "", {}, {},
+                f"observed_when.mismatch (expected {declared_when}, got {observed_at})",
+                observed_at=observed_at, observed_when=str(declared_when),
+            )
 
     assertion_type = str(expected_terminal.get("assertion_type", "")).strip()
     if assertion_type not in ASSERTION_TYPE_REGISTRY:
@@ -214,6 +247,8 @@ def evaluate_l2_oracle(
         expected_state=expected_state,
         actual_state=actual_state,
         diff=diff,
+        observed_at=observed_at,
+        observed_when=str(declared_when) if declared_when else (observed_at or "unspecified"),
     )
     if outcome == "fail":
         failure_signal = FailureSignal(
@@ -320,6 +355,8 @@ def _inconclusive(
     expected_state: Dict[str, Any],
     actual_state: Dict[str, Any],
     reason: str,
+    observed_at: Optional[str] = None,
+    observed_when: str = "unspecified",
 ) -> OracleL2Result:
     return OracleL2Result(
         status="inconclusive",
@@ -330,6 +367,8 @@ def _inconclusive(
         expected_state=expected_state,
         actual_state=actual_state,
         diff={},
+        observed_at=observed_at,
+        observed_when=observed_when,
         failure_signal=None,
     )
 

@@ -7,6 +7,11 @@ versioning.
 ## [Unreleased]
 
 ### Added
+- Sampling-time contract (`expected_terminal_state.observed_when` + executor
+  `observed_at`): when the semantic-map entry declares the moment a terminal
+  state must be read at, a missing or different sampling method withholds the
+  scenario fail-closed with an `observed_when` reason instead of silently
+  judging a possibly-stale state.
 - Console entry points: `veripipe` (run a batch), `veripipe-report` (funnel
   summary), `veripipe-mcp` (stdio server), so `pip install veripipe` puts the
   tools on PATH.
