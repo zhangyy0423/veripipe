@@ -26,6 +26,7 @@ class FunnelSummary:
     withheld_breakdown: Dict[str, int] = field(default_factory=dict)
     filed_rate: float = 0.0
     withheld_rate: float = 0.0
+    reasons: Dict[str, str] = field(default_factory=dict)
 
 
 def _int(mapping: Mapping[str, object], key: str) -> int:
@@ -34,13 +35,19 @@ def _int(mapping: Mapping[str, object], key: str) -> int:
 
 
 def summarize(results: Sequence[Mapping[str, object]]) -> FunnelSummary:
-    executed = filed = passed = no_signal = observed = 0
+    executed = filed = passed = no_signal = inconclusive = observed = 0
+    reasons: Dict[str, str] = {}
     for result in results:
         executed += _int(result, "executed_count")
         filed += _int(result, "reported_count")
         passed += _int(result, "pass_count")
         no_signal += _int(result, "no_signal_count")
+        inconclusive += _int(result, "inconclusive_count")
         observed += _int(result, "observed_count")
+        entries = result.get("frustration_reasons")
+        if isinstance(entries, Mapping):
+            for scenario_id, reason in entries.items():
+                reasons.setdefault(str(scenario_id), str(reason))
     withheld = max(executed - filed, 0)
     filed_rate = (filed / executed) if executed else 0.0
     return FunnelSummary(
@@ -50,17 +57,19 @@ def summarize(results: Sequence[Mapping[str, object]]) -> FunnelSummary:
         withheld=withheld,
         withheld_breakdown={
             "passed": passed,
-            "inconclusive_or_no_signal": no_signal,
+            "inconclusive_or_no_signal": no_signal + inconclusive,
+            "inconclusive_count": inconclusive,
             "observation_only": observed,
         },
         filed_rate=round(filed_rate, 4),
         withheld_rate=round(1 - filed_rate, 4) if executed else 0.0,
+        reasons=reasons,
     )
 
 
 def render(summary: FunnelSummary) -> str:
     b = summary.withheld_breakdown
-    return "\n".join([
+    lines = [
         "# Anti-false-positive funnel",
         f"- candidate checks executed: {summary.executed} (across {summary.batches} batch(es))",
         f"- filed as machine-verified findings: {summary.filed}",
@@ -69,7 +78,12 @@ def render(summary: FunnelSummary) -> str:
         f"    inconclusive / no-signal: {b.get('inconclusive_or_no_signal', 0)}",
         f"    observation-only: {b.get('observation_only', 0)}",
         f"- filed rate: {summary.filed_rate * 100:.0f}%",
-    ])
+    ]
+    if summary.reasons:
+        lines.append("- withheld reasons (scenario -> why):")
+        for scenario_id, reason in summary.reasons.items():
+            lines.append(f"    {scenario_id}: {reason}")
+    return "\n".join(lines)
 
 
 def trend(results: Sequence[Mapping[str, object]]) -> List[Dict[str, object]]:
@@ -120,6 +134,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     else:
         print(render(summary))
     return 0
+
+
+def main_cli() -> None:
+    """Console-script entry point: exit with the argparse result code."""
+
+    raise SystemExit(main())
 
 
 if __name__ == "__main__":

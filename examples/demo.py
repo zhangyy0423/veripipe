@@ -26,10 +26,11 @@ def verdict(label: str, observed: dict, claim: str) -> None:
     r = evaluate_l2_oracle(load_entry_by_id(MAP, ENTRY), observed,
                            scenario_id="demo", step_id="terminal", llm_involvement="none")
     filed = "FILED" if r.passed is False else ("passed, nothing to file" if r.passed else "NOT filed")
+    detail = f"  ({r.reason_class}: {r.reason})" if r.passed is None else ""
     print(f"  {label}")
     print(f"    agent says     : {claim}")
     print(f"    observed state : {observed or '(none)'}")
-    print(f"    oracle         : status={r.status} -> {filed}\n")
+    print(f"    oracle         : status={r.status} -> {filed}{detail}\n")
 
 
 def main() -> int:

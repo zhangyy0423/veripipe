@@ -41,6 +41,11 @@ dependencies = ["PyYAML>=6,<7"]
 # so `pip install veripipe` stays lean.
 live = ["websocket-client>=1,<2"]
 
+[project.scripts]
+veripipe = "pipeline_v2.orchestrator:main_sync"
+veripipe-report = "pipeline_v2.fp_report:main_cli"
+veripipe-mcp = "pipeline_v2_mcp.server:main_cli"
+
 [project.urls]
 Homepage = "https://github.com/zhangyy0423/veripipe"
 Repository = "https://github.com/zhangyy0423/veripipe"

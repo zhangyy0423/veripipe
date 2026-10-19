@@ -15,7 +15,7 @@ import re
 import socket
 import subprocess
 import urllib.parse
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Protocol, Sequence, Set
 
@@ -81,6 +81,19 @@ class ExecutionResult:
 
 class EnvironmentUnavailable(RuntimeError):
     """Raised internally when execution failure is environment, not product."""
+
+
+class InconclusiveSignal(RuntimeError):
+    """The L2 machine oracle produced no pass/fail verdict.
+
+    Carries the fail-closed reason (e.g. missing observed field, unknown
+    assertion type) so the batch report can tell the operator *why* a scenario
+    was withheld, instead of lumping every holdback into ``no_signal``.
+    """
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
 
 
 class ExecutorProtocol(Protocol):
@@ -230,7 +243,9 @@ class OrchestratorResult:
     brief_path: Optional[str]
     module_steps: List[Dict[str, str]]
     coverage: Optional[Dict[str, Any]] = None
+    inconclusive_count: int = 0
     oracle_levels: Optional[List[str]] = None
+    frustration_reasons: Dict[str, str] = field(default_factory=dict)
 
     def as_dict(self) -> Dict[str, Any]:
         return {
@@ -241,11 +256,13 @@ class OrchestratorResult:
             "executed_count": self.executed_count,
             "pass_count": self.pass_count,
             "no_signal_count": self.no_signal_count,
+            "inconclusive_count": self.inconclusive_count,
             "reported_count": self.reported_count,
             "observed_count": self.observed_count,
             "expired_count": self.expired_count,
             "environment_event": self.environment_event,
             "environment_reasons": self.environment_reasons,
+            "frustration_reasons": dict(self.frustration_reasons),
             "report_refs": self.report_refs,
             "queue_path": self.queue_path,
             "brief_path": self.brief_path,
@@ -349,6 +366,8 @@ class PipelineV2Orchestrator:
         executed_count = 0
         pass_count = 0
         no_signal_count = 0
+        inconclusive_count = 0
+        frustration_reasons: Dict[str, str] = {}
 
         if sentinel_status != "triggered":
             for scenario in scenarios:
@@ -361,10 +380,16 @@ class PipelineV2Orchestrator:
                     reason = str(exc).strip()
                     if reason:
                         environment_reasons.append(reason)
+                        frustration_reasons.setdefault(scenario.scenario_id, reason)
                     sentinel_status = "triggered"
                     signals = []
                     signal_scenarios = {}
                     break
+                except InconclusiveSignal as exc:
+                    if countable:
+                        inconclusive_count += 1
+                        frustration_reasons.setdefault(scenario.scenario_id, exc.reason)
+                    continue
                 if signal is None:
                     if countable and scenario.oracle_level == "L1":
                         no_signal_count += 1
@@ -433,11 +458,13 @@ class PipelineV2Orchestrator:
             executed_count=executed_count,
             pass_count=pass_count,
             no_signal_count=no_signal_count,
+            inconclusive_count=inconclusive_count,
             reported_count=len(funnel_result.reported),
             observed_count=funnel_result.observed_count,
             expired_count=len(expired),
             environment_event=environment_event,
             environment_reasons=environment_reasons,
+            frustration_reasons=frustration_reasons,
             report_refs=report_refs,
             queue_path=str(self.queue_path) if self.queue_path else None,
             brief_path=str(self.brief_path) if self.brief_path else None,
@@ -521,6 +548,35 @@ class PipelineV2Orchestrator:
                 return "triggered"
         return "passed"
 
+    def _holdback_reason(self, scenario: ExecutionScenario) -> str:
+        """Human-readable reason a scenario produced no signal at all.
+
+        Buckets: ``contract`` (semantic-map entry missing/malformed, unknown
+        assertion type), ``observation`` (observed_state missing/empty),
+        ``opaque`` (everything else). Only the L2 machine channel is replayed;
+        pass is a real verdict and is not recorded here.
+        """
+
+        if scenario.oracle_level == "L2" and scenario.oracle_strategy == "machine_check":
+            try:
+                from .oracle_l2 import evaluate_l2_oracle
+            except Exception:
+                return "opaque: oracle unavailable"
+            try:
+                oracle = evaluate_l2_oracle(
+                    scenario.semantic_map_entry or {},
+                    {},
+                    scenario_id=scenario.scenario_id,
+                    step_id=scenario.step_id,
+                    llm_involvement=scenario.llm_involvement,
+                )
+                return f"{oracle.reason_class}: {oracle.reason}"
+            except KeyError:
+                return "contract: semantic_map_entry missing"
+            except Exception as exc:
+                return f"opaque: {type(exc).__name__}: {exc}"
+        return "opaque: no signal"
+
     def _generate_signal(self, scenario: ExecutionScenario) -> Optional[FailureSignal]:
         if scenario.oracle_level == "L4":
             return None
@@ -550,6 +606,8 @@ class PipelineV2Orchestrator:
             static_certified=scenario.static_certified,
         )
         if oracle.failure_signal is None:
+            if oracle.status == "inconclusive":
+                raise InconclusiveSignal(f"{oracle.reason_class}: {oracle.reason}")
             return None
         return self._attach_executor_evidence(oracle.failure_signal, result)
 
@@ -2936,6 +2994,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     finally:
         ledger.close()
     return 0
+
+
+def main_sync() -> None:
+    """Console-script entry: run the orchestrator main with a proper exit code."""
+
+    raise SystemExit(main())
 
 
 if __name__ == "__main__":

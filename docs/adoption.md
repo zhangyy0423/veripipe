@@ -38,6 +38,10 @@ From PyPI:
 
 ```bash
 pip install veripipe
+
+veripipe --help
+veripipe-report --result batch.json
+veripipe-mcp
 ```
 
 Or the latest `main` from GitHub: `pip install "git+https://github.com/zhangyy0423/veripipe"`.
@@ -55,7 +59,7 @@ python3 -m pipeline_v2.orchestrator \
 Summarize any run into an auditable number:
 
 ```bash
-python3 -m pipeline_v2.fp_report --result /tmp/result.json
+veripipe-report --result /tmp/result.json
 ```
 
 ## Wire it into an MCP host

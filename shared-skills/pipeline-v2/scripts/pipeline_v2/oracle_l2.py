@@ -75,12 +75,36 @@ class OracleL2Result:
             "status": self.status,
             "passed": self.passed,
             "reason": self.reason,
+            "reason_class": self.reason_class,
             "semantic_map_entry_id": self.semantic_map_entry_id,
             "assertion_type": self.assertion_type,
             "expected_state": self.expected_state,
             "actual_state": self.actual_state,
             "diff": self.diff,
         }
+
+    @property
+    def reason_class(self) -> str:
+        """Bucket an inconclusive/fail reason for reporting.
+
+        ``contract``: the semantic-map entry itself is missing or unreadable —
+        fix the map, not the transport. ``observation``: the observed state is
+        missing or malformed — fix the collection, not the map.
+        ``environment``: the executor signalled the environment is unavailable.
+        ``opaque``: everything else (fail-closed by definition).
+        """
+
+        reason = self.reason or ""
+        if reason in ("expected_terminal_state", "expected_terminal_state.assertion_type") \
+                or reason == "text-field-not-allowed" \
+                or "expected_terminal_state." in reason:
+            return "contract"
+        if reason in ("observed_state", "observed_state.field", "observed_state.value_from",
+                      "observed_state.not_mapping", "observed_state.count"):
+            return "observation"
+        if reason == "environment_unavailable" or "environment" in reason:
+            return "environment"
+        return "opaque"
 
 
 def load_entry_by_id(semantic_map: Mapping[str, Any], entry_id: str) -> Mapping[str, Any]:

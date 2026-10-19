@@ -6,6 +6,18 @@ versioning.
 
 ## [Unreleased]
 
+### Added
+- Console entry points: `veripipe` (run a batch), `veripipe-report` (funnel
+  summary), `veripipe-mcp` (stdio server), so `pip install veripipe` puts the
+  tools on PATH.
+- Scoped hold-back reasons: when the L2 oracle withholds a scenario as
+  `inconclusive`, the batch result now carries `inconclusive_count` and a
+  `frustration_reasons` map (bucket: `contract` / `observation` / `opaque`).
+  `veripipe-report` renders them, so "nothing filed, no defect" explains
+  exactly why instead of one opaque no-signal number.
+- The demo prints the L2 reason for every withheld verdict.
+
+
 ## [0.1.1] - 2026-10-09
 
 ### Added

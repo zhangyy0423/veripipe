@@ -17,6 +17,7 @@ class DemoTest(unittest.TestCase):
         self.assertIn("status=pass", out)
         self.assertIn("status=fail -> FILED", out)
         self.assertIn("inconclusive -> NOT filed", out)
+        self.assertIn("observation: observed_state.field", out)
 
 
 if __name__ == "__main__":

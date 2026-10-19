@@ -21,7 +21,8 @@ zero-dependency MCP server so any MCP host can drive it.
 **Who it's for:** teams running AI agents against web/HTTP products who are
 tired of triaging confident-but-wrong bug reports.
 
-**Get it:** `pip install veripipe` — v0.1.1 on [PyPI](https://pypi.org/project/veripipe/).
+**Get it:** `pip install veripipe` — v0.1.1 on [PyPI](https://pypi.org/project/veripipe/);
+`veripipe`, `veripipe-report`, and `veripipe-mcp` are on PATH.
 For dsh hosts: the [`dsh-veripipe`](https://github.com/zhangyy0423/dsh-veripipe)
 plugin (per-turn completion receipts) is listed in
 [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin).
@@ -127,6 +128,10 @@ Install from PyPI:
 
 ```bash
 pip install veripipe          # installs pipeline_v2 + pipeline_v2_mcp (pulls PyYAML)
+
+veripipe --help               # run a verification batch
+veripipe-report --result batch.json   # anti-false-positive funnel summary
+veripipe-mcp                  # stdio MCP server
 ```
 
 Or install the latest `main` from GitHub:

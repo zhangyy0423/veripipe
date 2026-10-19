@@ -142,3 +142,9 @@ def main(argv: Optional[list] = None) -> int:
     except (BrokenPipeError, KeyboardInterrupt):
         return 0
     return 0
+
+
+def main_cli() -> None:
+    """Console-script entry point: serve the MCP loop on stdio."""
+
+    raise SystemExit(main())
